@@ -1,6 +1,4 @@
-![Shrudaya GIF](https://cdn.dribbble.com/userupload/33219605/file/original-3e652baea723121800ca0068452af00e.gif)
-
-# 🧠 Shrudaya: A Real-Time Conversational AI Companion
+# 🧠 Vaani: A Real-Time Conversational AI Companion
 
 Shrudaya is a sophisticated, voice-driven AI companion designed for natural, real-time conversation. It seamlessly integrates multiple state-of-the-art AI services into a fluid, responsive, and engaging user experience. The project features a full-stack web application with a polished user interface, alongside the original command-line script for local interaction.
 
