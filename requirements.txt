@@ -1,6 +1,7 @@
 # --- Web Framework & Server ---
-fastapi
-uvicorn
+django
+channels
+daphne
 jinja2
 python-multipart
 websockets
