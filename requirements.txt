@@ -2,6 +2,7 @@
 django
 channels
 daphne
+whitenoise
 
 # --- AI & Audio Processing ---
 numpy
