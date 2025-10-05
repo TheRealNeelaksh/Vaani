@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const startCall = (contact) => {
-        const password = prompt("Please enter the password to connect:");
-        if (!password) return;
+        // const password = prompt("Please enter the password to connect:");
+        // if (!password) return;
 
         chatLog.innerHTML = '';
         isMuted = false;
@@ -106,8 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 setupAudioPlayback();
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                // MODIFIED: Pass the selected character name as a URL parameter
-                const wsUrl = `${wsProtocol}//${window.location.host}/ws?password=${encodeURIComponent(password)}&character=${contact}`;
+                const wsUrl = `${wsProtocol}//${window.location.host}/ws/${contact}/`;
                 socket = new WebSocket(wsUrl);
                 
                 socket.onopen = () => {
@@ -122,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 socket.onmessage = handleSocketMessage;
                 socket.onclose = (event) => {
-                    if (event.code === 4001) { alert("Authentication failed."); }
+                    // if (event.code === 4001) { alert("Authentication failed."); }
                     endCall(`Connection closed (code: ${event.code})`);
                 };
                 socket.onerror = () => endCall('A connection error occurred.');

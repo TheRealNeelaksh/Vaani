@@ -1,9 +1,7 @@
 # --- Web Framework & Server ---
-fastapi
-uvicorn
-jinja2
-python-multipart
-websockets
+django
+channels
+daphne
 
 # --- AI & Audio Processing ---
 numpy

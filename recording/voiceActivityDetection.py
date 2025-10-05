@@ -3,20 +3,23 @@ import wave
 import audioop
 import time
 
-def record_audio(output_file='recorded_audio.wav', silence_limit=2, silence_threshold=1000):
+
+def record_audio(
+    output_file="recorded_audio.wav", silence_limit=2, silence_threshold=1000
+):
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 16000  # Slightly lower rate to reduce load
     CHUNK = 1024
 
     p = pyaudio.PyAudio()
-    stream_in = p.open(format=FORMAT,
-                       channels=CHANNELS,
-                       rate=RATE,
-                       input=True,
-                       frames_per_buffer=CHUNK)
+    stream_in = p.open(
+        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
+    )
 
-    print("🎙️ Speak your heart out. Recording will stop automatically after silence...\n")
+    print(
+        "🎙️ Speak your heart out. Recording will stop automatically after silence...\n"
+    )
     frames = []
     silence_start = None
     started = False
@@ -43,11 +46,11 @@ def record_audio(output_file='recorded_audio.wav', silence_limit=2, silence_thre
         stream_in.close()
         p.terminate()
 
-    with wave.open(output_file, 'wb') as wf:
+    with wave.open(output_file, "wb") as wf:
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(p.get_sample_size(FORMAT))
         wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
+        wf.writeframes(b"".join(frames))
 
     print("✅ Recording saved as", output_file)
     return output_file

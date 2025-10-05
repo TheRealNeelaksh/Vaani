@@ -1,10 +1,10 @@
+from brain.mistralAPI_brain import mistral_chat  # Brain
+from tts.elevenLabs.xiTTS import speak_text_xi  # TTS
+from logs.logger import log_conversation  # Logger
+from misc.chimePlayer import play_chime  # Chime Notification
+from stt.sarvamSTT import transcribe_audio  # STT
+from recording.recordingAudio import record_audio  # Audio Recorder
 
-from brain.mistralAPI_brain import mistral_chat   # Brain
-from tts.elevenLabs.xiTTS import speak_text_xi    # TTS
-from logs.logger import log_conversation          # Logger
-from misc.chimePlayer import play_chime           # Chime Notification
-from stt.sarvamSTT import transcribe_audio        # STT
-from recording.recordingAudio import record_audio # Audio Recorder
 
 def main():
     conversation = []
@@ -31,10 +31,11 @@ def main():
             print("👋 Alright, Vansh. Catch you later!")
             break
         conversation, ai_reply = mistral_chat(transcript, conversation)
-        
+
         speak_text_xi(ai_reply)
         if ai_reply:
             log_conversation("AI", ai_reply)
+
 
 if __name__ == "__main__":
     main()

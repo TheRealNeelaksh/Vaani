@@ -3,7 +3,8 @@ import time
 import sys
 import wave
 
-def record_audio(duration=10, output_file='recorded_audio.wav'):
+
+def record_audio(duration=10, output_file="recorded_audio.wav"):
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 44100
@@ -11,11 +12,9 @@ def record_audio(duration=10, output_file='recorded_audio.wav'):
 
     p = pyaudio.PyAudio()
 
-    stream_in = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
+    stream_in = p.open(
+        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
+    )
 
     print(f"🎙️ Recording... Speak! Recording will last {duration} seconds.")
     frames = []
@@ -39,10 +38,10 @@ def record_audio(duration=10, output_file='recorded_audio.wav'):
     stream_in.close()
     p.terminate()
 
-    with wave.open(output_file, 'wb') as wf:
+    with wave.open(output_file, "wb") as wf:
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(p.get_sample_size(FORMAT))
         wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
+        wf.writeframes(b"".join(frames))
 
     return output_file

@@ -6,11 +6,13 @@ import io
 import time
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Replace with your actual endpoint and API key
 url = "https://api.aws.us-east-1.cerebrium.ai/v4/p-f1b4b447/10-sesame-voice-api/generate_audio"
 api_key = os.getenv("CEREBRIUM_API")  # Replace with your Cerebrium API key
+
 
 def speak_text_sesame(text):
     """
@@ -18,15 +20,12 @@ def speak_text_sesame(text):
     """
     # Prepare the request payload
     payload = json.dumps({"text": text})
-    headers = {
-        'Authorization': f'Bearer {api_key}',
-        'Content-Type': 'application/json'
-    }
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
     # Time the request
-    print(f"Sending text to be converted: \"{text}\"")
+    print(f'Sending text to be converted: "{text}"')
     start_time = time.time()
-    
+
     try:
         # Send the POST request
         response = requests.post(url, headers=headers, data=payload)
@@ -38,7 +37,7 @@ def speak_text_sesame(text):
             print(f"Generated audio in {end_time - start_time:.2f} seconds!")
 
             # Convert base64 to audio file
-            audio_data = base64.b64decode(result['result']["audio_data"])
+            audio_data = base64.b64decode(result["result"]["audio_data"])
             audio_buffer = io.BytesIO(audio_data)
             audio, rate = sf.read(audio_buffer)
 
@@ -50,8 +49,6 @@ def speak_text_sesame(text):
         else:
             print(f"Error: {response.status_code}")
             print(response.text)
-    
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
-
-

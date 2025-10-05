@@ -7,6 +7,7 @@ from mistralai.async_client import MistralAsyncClient
 
 load_dotenv()
 
+
 # ==============================================================================
 # SYNCHRONOUS FUNCTION (Unchanged)
 # ==============================================================================
@@ -29,7 +30,7 @@ def mistral_chat(user_message, conversation):
     """
     if not conversation or conversation[0]["role"] != "system":
         conversation.insert(0, {"role": "system", "content": system_prompt})
-    
+
     conversation.append({"role": "user", "content": user_message})
     full_reply = ""
     try:
@@ -39,12 +40,13 @@ def mistral_chat(user_message, conversation):
                 content = chunk.choices[0].delta.content
                 if content:
                     full_reply += content
-        
+
         conversation.append({"role": "assistant", "content": full_reply})
         return conversation, full_reply
     except Exception as e:
         print(f"❌ Error during Mistral chat: {e}")
         return conversation, ""
+
 
 # ==============================================================================
 # ASYNCHRONOUS STREAMING FUNCTION (MODIFIED)
@@ -61,13 +63,13 @@ async def stream_mistral_chat_async(user_message: str, conversation: list):
 
     async_client = MistralAsyncClient(api_key=api_key)
     MODEL = "mistral-small-latest"
-    
+
     # --- MODIFICATION ---
     # The system prompt is now handled by server.py before calling this function.
     # We no longer define it here. We just append the new user message.
-    
+
     conversation.append({"role": "user", "content": user_message})
-    
+
     full_reply = ""
     try:
         async for chunk in async_client.chat_stream(model=MODEL, messages=conversation):
@@ -75,7 +77,7 @@ async def stream_mistral_chat_async(user_message: str, conversation: list):
                 content = chunk.choices[0].delta.content
                 full_reply += content
                 yield content
-        
+
         # Append the full reply to the conversation history for context
         conversation.append({"role": "assistant", "content": full_reply})
 

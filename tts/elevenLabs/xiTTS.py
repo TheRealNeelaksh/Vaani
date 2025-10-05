@@ -6,6 +6,7 @@ from elevenlabs.client import AsyncElevenLabs
 
 load_dotenv()
 
+
 async def stream_tts_audio(text: str, character_name: str):
     """
     Streams audio from ElevenLabs using the voice corresponding to the character_name.
@@ -19,7 +20,7 @@ async def stream_tts_audio(text: str, character_name: str):
         voice_id = os.getenv("xiVEER")
     else:
         voice_id = os.getenv("xiTAARA")
-    
+
     if not voice_id:
         print(f"⚠️ Voice ID for {character_name} not found in .env file.")
         return
@@ -27,9 +28,7 @@ async def stream_tts_audio(text: str, character_name: str):
     client = AsyncElevenLabs(api_key=api_key)
     try:
         audio_stream = client.text_to_speech.stream(
-            text=text,
-            voice_id=voice_id,
-            model_id="eleven_multilingual_v2"
+            text=text, voice_id=voice_id, model_id="eleven_multilingual_v2"
         )
         async for chunk in audio_stream:
             yield chunk

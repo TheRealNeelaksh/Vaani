@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vaani</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -13,10 +14,10 @@
         <div class="header-left">
             <div class="logo">🥹</div>
             <div id="status-indicator" class="status-indicator">
-                <img id="status-listening" src="{{ url_for('static', path='assets/press.gif') }}" alt="Listening..." class="status-gif">
-                <img id="status-processing" src="{{ url_for('static', path='assets/notes.gif') }}" alt="Processing..." class="status-gif">
-                <img id="status-speaking" src="{{ url_for('static', path='assets/speak.gif') }}" alt="Speaking..." class="status-gif">
-                <img id="status-muted" src="{{ url_for('static', path='assets/mute.gif') }}" alt="Muted" class="status-gif">
+                <img id="status-listening" src="{% static 'assets/press.gif' %}" alt="Listening..." class="status-gif">
+                <img id="status-processing" src="{% static 'assets/notes.gif' %}" alt="Processing..." class="status-gif">
+                <img id="status-speaking" src="{% static 'assets/speak.gif' %}" alt="Speaking..." class="status-gif">
+                <img id="status-muted" src="{% static 'assets/mute.gif' %}" alt="Muted" class="status-gif">
             </div>
         </div>
         <div id="mode-indicator" class="mode-indicator"></div>
@@ -51,7 +52,7 @@
             <div class="split-container">
                 <div class="split-section left">
                     <div class="model-card" id="taara-card">
-                        <img src="{{ url_for('static', path='assets/ai_images/taara.png') }}" alt="AI Model Taara" class="model-avatar">
+                        <img src="{% static 'assets/ai_images/taara.png' %}" alt="AI Model Taara" class="model-avatar">
                         <div class="card-content">
                             <div class="card-top">
                                 <h2 class="anim-fade-in">TAARA</h2>
@@ -72,7 +73,7 @@
                 </div>
                 <div class="split-section right">
                     <div class="model-card" id="veer-card">
-                        <img src="{{ url_for('static', path='assets/ai_images/veer.png') }}" alt="AI Model Veer" class="model-avatar">
+                        <img src="{% static 'assets/ai_images/veer.png' %}" alt="AI Model Veer" class="model-avatar">
                         <div class="card-content">
                             <div class="card-top">
                                 <h2 class="anim-fade-in">VEER</h2>
@@ -124,9 +125,9 @@
             </div>
         </div>
     </main>
-    <audio id="caller-tune" src="{{ url_for('static', path='assets/callertune.mp3') }}" loop preload="auto"></audio>
-    <audio id="connection-chime" src="{{ url_for('static', path='assets/chime.wav') }}" preload="auto"></audio>
-    <audio id="typing-sound" src="{{ url_for('static', path='assets/chat.mp3') }}" preload="auto"></audio>
-    <script src="{{ url_for('static', path='script.js') }}"></script>
+    <audio id="caller-tune" src="{% static 'assets/callertune.mp3' %}" loop preload="auto"></audio>
+    <audio id="connection-chime" src="{% static 'assets/chime.wav' %}" preload="auto"></audio>
+    <audio id="typing-sound" src="{% static 'assets/chat.mp3' %}" preload="auto"></audio>
+    <script src="{% static 'script.js' %}"></script>
 </body>
 </html>
