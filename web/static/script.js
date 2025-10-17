@@ -322,32 +322,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    supabase.auth.onAuthStateChange((event, session) => {
-        updateUserNav(session?.user);
-    });
+    const initializeUI = () => {
+        const accessTaaraBtn = document.querySelector('.access-button[data-model="Taara"]');
+        const accessVeerBtn = document.querySelector('.access-button[data-model="Veer"]');
+        const endCallBtn = document.getElementById('end-call-btn');
+        const goBackBtn = document.getElementById('go-back-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const chatForm = document.getElementById('chat-form');
 
-    // Initial check
-    const initializeSupabase = async () => {
+        if (accessTaaraBtn) accessTaaraBtn.addEventListener('click', () => startCall('Taara'));
+        if (accessVeerBtn) accessVeerBtn.addEventListener('click', () => startCall('Veer'));
+        if (goBackBtn) goBackBtn.addEventListener('click', () => showScreen('model-select-screen'));
+        if (endCallBtn) endCallBtn.addEventListener('click', () => endCall());
+        if (muteBtn) muteBtn.addEventListener('click', toggleMute);
+        if (chatForm) chatForm.addEventListener('submit', handleTextMessageSubmit);
+    };
+
+    const initializeApp = async () => {
         const response = await fetch('/config');
         const config = await response.json();
         supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabase.auth.onAuthStateChange((_event, session) => {
             updateUserNav(session?.user);
+            initializeUI();
         });
 
         const { data: { session } } = await supabase.auth.getSession();
         updateUserNav(session?.user);
+        initializeUI();
     };
 
-    initializeSupabase();
-
-    // --- EVENT LISTENERS ---
-    accessTaaraBtn.addEventListener('click', () => startCall('Taara'));
-    // MODIFIED: Veer is now fully functional
-    accessVeerBtn.addEventListener('click', () => startCall('Veer'));
-    goBackBtn.addEventListener('click', () => showScreen('model-select-screen'));
-    endCallBtn.addEventListener('click', () => endCall());
-    muteBtn.addEventListener('click', toggleMute);
-    chatForm.addEventListener('submit', handleTextMessageSubmit);
+    initializeApp();
 });

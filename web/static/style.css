@@ -108,15 +108,20 @@ header.main-header {
 }
 
 .login-btn {
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: transparent;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.login-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .login-btn:hover {
@@ -250,14 +255,14 @@ main {
 .model-card {
   position: relative;
   z-index: 2;
-  background: var(--card-bg-color);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  width: 360px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px var(--shadow-color);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  width: 380px;
+  padding: 2.5rem;
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -354,10 +359,10 @@ main {
 .model-card .access-button {
   width: 100%;
   padding: 1rem;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  background-color: var(--accent-color);
-  color: var(--accent-text-color);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -767,10 +772,13 @@ input:checked+.slider:before {
 }
 
 .auth-container {
-    background-color: var(--container-bg);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px var(--shadow-color);
+    border-radius: 25px;
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.2);
     color: var(--text-primary);
     width: 90%;
     max-width: 400px;
