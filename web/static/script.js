@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chat-input');
     const callName = document.getElementById('call-name');
     const callTimer = document.getElementById('call-timer');
-    const callVisualizer = document.getElementById('call-visualizer');
     const modeIndicator = document.getElementById('mode-indicator');
     const allGifs = {
         listening: document.getElementById('status-listening'),
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioQueue = [], isAppending = false;
     let isAiSpeaking = false, isMuted = false;
     let currentAiMessageElement = null;
-    let aiSpeakingAnimationId;
 
     // --- SCREEN MANAGEMENT LOGIC ---
     if (document.getElementById('model-select-screen').classList.contains('active')) {
@@ -122,10 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateChatInputState();
                     updateStatusIndicator('listening');
                     setTimeout(() => { addMessageToChatLog('ai', "I'm connected! By default, we're in VOICE mode. Just start talking! To switch to TEXT mode, press the Mute button."); }, 500);
-
-                    // Attach event listeners for call screen buttons
-                    document.getElementById('end-call-btn').addEventListener('click', () => endCall());
-                    document.getElementById('mute-btn').addEventListener('click', toggleMute);
                 };
                 socket.onmessage = handleSocketMessage;
                 socket.onclose = (event) => {
@@ -139,18 +133,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }, randomDelay);
     };
     
-    const aiSpeakingAnimation = () => {
-        const pulse = 1 + Math.sin(Date.now() / 300) * 0.1;
-        callVisualizer.style.transform = `scale(${pulse})`;
-        aiSpeakingAnimationId = requestAnimationFrame(aiSpeakingAnimation);
+    const toggleAgentOrb = (isSpeaking) => {
+        const agentOrb = document.getElementById('agent-orb');
+        if (agentOrb) {
+            if (isSpeaking) {
+                agentOrb.classList.add('speaking');
+            } else {
+                agentOrb.classList.remove('speaking');
+            }
+        }
     };
-
-    const startAiSpeakingAnimation = () => { if (!aiSpeakingAnimationId) aiSpeakingAnimation(); };
-    const stopAiSpeakingAnimation = () => { if (aiSpeakingAnimationId) { cancelAnimationFrame(aiSpeakingAnimationId); aiSpeakingAnimationId = null; callVisualizer.style.transform = 'scale(1)'; } };
     
     const setupAudioProcessing = async () => {
         try {
-            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+            const selectedMicId = localStorage.getItem('selectedMicrophone');
+            const audioConstraints = {
+                sampleRate: 16000,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true
+            };
+            if (selectedMicId) {
+                audioConstraints.deviceId = { exact: selectedMicId };
+            }
+
+            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
             audioContext = new AudioContext({ sampleRate: 16000 });
             await audioContext.audioWorklet.addModule('/static/audio-processor.js');
             workletNode = new AudioWorkletNode(audioContext, 'audio-processor');
@@ -160,17 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const audioBuffer = event.data;
                 const base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(audioBuffer)));
                 socket.send(JSON.stringify({ type: 'audio_chunk', data: base64Data }));
-
-                const floatArray = new Float32Array(audioBuffer);
-                const avgVolume = floatArray.reduce((a, b) => a + Math.abs(b), 0) / floatArray.length;
-                let scale = 1 + avgVolume * 8;
-                scale = Math.min(scale, 1.3);
-                callVisualizer.style.transform = `scale(${scale})`;
             };
             const source = audioContext.createMediaStreamSource(mediaStream);
             source.connect(workletNode);
         } catch (err) {
-            endCall("Could not access microphone.");
+            console.error("Error in setupAudioProcessing:", err);
+            let errorMessage = "Could not access microphone.";
+            if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError') {
+                errorMessage = "Selected microphone not found. Please select another from the account page.";
+            }
+            endCall(errorMessage);
         }
     };
 
@@ -219,12 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (msg.type === 'tts_start') {
                 isAiSpeaking = true;
                 updateStatusIndicator('speaking');
-                startAiSpeakingAnimation();
+                toggleAgentOrb(true);
             } else if (msg.type === 'tts_end') {
                 setTimeout(() => {
                     isAiSpeaking = false;
                     updateStatusIndicator('listening');
-                    stopAiSpeakingAnimation();
+                    toggleAgentOrb(false);
                 }, 2000); 
             }
         }
@@ -242,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
         if (audioElement && audioElement.src) URL.revokeObjectURL(audioElement.src);
         audioQueue = []; isAiSpeaking = false;
-        stopAiSpeakingAnimation();
         showScreen('model-select-screen');
         updateStatusIndicator('idle');
         modeIndicator.classList.remove('visible');
@@ -331,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         supabase.auth.onAuthStateChange((_event, session) => {
             updateUserNav(session?.user);
-            initializeUI();
         });
 
         const { data: { session } } = await supabase.auth.getSession();

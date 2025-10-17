@@ -124,11 +124,6 @@ header.main-header {
   transform: translateY(-2px);
 }
 
-.login-btn:hover {
-  background-color: var(--text-primary);
-  color: var(--bg-color);
-}
-
 /* Clean header for selection screen */
 .selection-header {
   position: absolute;
@@ -627,14 +622,34 @@ input:checked+.slider:before {
   color: var(--text-secondary);
 }
 
-#call-visualizer {
-  width: 180px;
-  height: 180px;
+.agent-orb {
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background-color: var(--accent-color);
+  background: radial-gradient(circle, #ff9a8b 0%, #ff6a88 100%);
   margin: 40px 0;
   transform: scale(1);
-  transition: transform 0.1s ease-out, background-color 0.3s ease;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+}
+
+.agent-orb.speaking {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 106, 136, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+  }
 }
 
 .call-controls {
@@ -760,4 +775,100 @@ input:checked+.slider:before {
     background-size: 120%;
     background-position: 50% center;
   }
+}
+
+.agent-orb {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff9a8b 0%, #ff6a88 100%);
+  margin: 40px 0;
+  transform: scale(1);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+}
+
+.agent-orb.speaking {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 106, 136, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 106, 136, 0.5);
+  }
+}
+
+/* Auth Page Styles */
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-image: url('/static/assets/ai_potraits/taara_potrait.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.auth-container {
+    background: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    padding: 40px;
+    border-radius: 25px;
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.auth-container h3 {
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.auth-container p {
+    margin-bottom: 2rem;
+    color: #eee;
+}
+
+#login-form input, #auth-container button {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1rem;
+}
+
+#login-form button, #auth-container button {
+    background-color: var(--accent-color);
+    color: var(--accent-text-color);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#login-form button:hover, #auth-container button:hover {
+    transform: translateY(-2px);
+    background-color: #ff6878;
+}
+
+#auth-message {
+    margin-top: 1rem;
+    color: #eee;
 }
