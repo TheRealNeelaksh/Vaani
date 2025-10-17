@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account | Vaani</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <h3>Account Information</h3>
+            <p>Welcome, <span id="user-email"></span>!</p>
+            <button id="logout-button">Log out</button>
+            <a href="/" class="go-back-button">Go Back</a>
+        </div>
+    </div>
+    <script>
+        let supabase;
+        const userEmailElement = document.getElementById('user-email');
+        const logoutButton = document.getElementById('logout-button');
+
+        const handleSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/login';
+            } else {
+                userEmailElement.textContent = session.user.email;
+            }
+        };
+
+        logoutButton.addEventListener('click', async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error('Error logging out:', error);
+            } else {
+                window.location.href = '/';
+            }
+        });
+
+        const initializeSupabase = async () => {
+            const response = await fetch('/config');
+            const config = await response.json();
+            supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    window.location.href = '/';
+                }
+            });
+
+            handleSession();
+        };
+
+        initializeSupabase();
+    </script>
+</body>
+</html>

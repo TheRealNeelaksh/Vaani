@@ -17,6 +17,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 from brain.mistralAPI_brain import stream_mistral_chat_async
 from stt.sarvamSTT import transcribe_audio
@@ -33,6 +34,11 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="web/static"), name="static")
 templates = Jinja2Templates(directory="web/templates")
 SAMPLE_RATE = 16000
+
+# Supabase setup
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = create_client(url, key)
 
 # ==============================================================================
 # 2. VAD MODULE
@@ -55,6 +61,21 @@ except Exception as e:
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/login", response_class=HTMLResponse)
+async def get_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/account", response_class=HTMLResponse)
+async def get_account(request: Request):
+    return templates.TemplateResponse("account.html", {"request": request})
+
+@app.get("/config")
+async def get_config():
+    return {
+        "supabase_url": os.environ.get("SUPABASE_URL"),
+        "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY"),
+    }
 
 async def safe_send(websocket: WebSocket, message: dict):
     try: await websocket.send_text(json.dumps(message))
@@ -131,15 +152,23 @@ async def _process_text_message(websocket: WebSocket, transcript: str, conversat
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    app_password = os.getenv("APP_PASSWORD")
-    password_from_client = websocket.query_params.get("password")
+    token = websocket.query_params.get("token")
     selected_character = websocket.query_params.get("character", "Taara")
     logging.info(f"New connection attempt for character: {selected_character}")
 
-    if app_password and password_from_client != app_password:
+    if not token:
+        await websocket.close(code=4001, reason="Authentication failed: No token provided.")
+        return
+
+    try:
+        user_response = supabase.auth.get_user(token)
+        if not user_response.user:
+            raise Exception("Invalid token")
+    except Exception as e:
+        logging.error(f"Authentication failed: {e}")
         await websocket.close(code=4001, reason="Authentication failed")
         return
-    
+
     await websocket.accept()
     
     if selected_character == "Veer":

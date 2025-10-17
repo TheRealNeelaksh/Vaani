@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- SUPABASE CLIENT SETUP ---
+    let supabase;
+
+    // --- AUTH MODAL ELEMENTS ---
+    const loginButtons = document.querySelectorAll('.login-btn');
+
     // --- THEME SWITCHER LOGIC ---
     const themeToggle = document.getElementById('theme-toggle');
     const body = document.body;
@@ -88,9 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return messageBubble;
     };
 
-    const startCall = (contact) => {
-        const password = prompt("Please enter the password to connect:");
-        if (!password) return;
+    const startCall = async (contact) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            alert("You must be logged in to start a call.");
+            return;
+        }
 
         chatLog.innerHTML = '';
         isMuted = false;
@@ -106,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 setupAudioPlayback();
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                // MODIFIED: Pass the selected character name as a URL parameter
-                const wsUrl = `${wsProtocol}//${window.location.host}/ws?password=${encodeURIComponent(password)}&character=${contact}`;
+                const token = session.access_token;
+                const wsUrl = `${wsProtocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}&character=${contact}`;
                 socket = new WebSocket(wsUrl);
                 
                 socket.onopen = () => {
@@ -122,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 socket.onmessage = handleSocketMessage;
                 socket.onclose = (event) => {
-                    if (event.code === 4001) { alert("Authentication failed."); }
+                    if (event.code === 4001) { alert("Authentication failed. Please log in again."); }
                     endCall(`Connection closed (code: ${event.code})`);
                 };
                 socket.onerror = () => endCall('A connection error occurred.');
@@ -293,6 +302,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // --- AUTH LOGIC ---
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error logging out:', error);
+        }
+    };
+
+    const updateUserNav = (user) => {
+        loginButtons.forEach(button => {
+            if (user) {
+                button.textContent = 'Account';
+                button.onclick = () => window.location.href = '/account';
+            } else {
+                button.textContent = 'Log in';
+                button.onclick = () => window.location.href = '/login';
+            }
+        });
+    };
+
+    supabase.auth.onAuthStateChange((event, session) => {
+        updateUserNav(session?.user);
+    });
+
+    // Initial check
+    const initializeSupabase = async () => {
+        const response = await fetch('/config');
+        const config = await response.json();
+        supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            updateUserNav(session?.user);
+        });
+
+        const { data: { session } } = await supabase.auth.getSession();
+        updateUserNav(session?.user);
+    };
+
+    initializeSupabase();
+
     // --- EVENT LISTENERS ---
     accessTaaraBtn.addEventListener('click', () => startCall('Taara'));
     // MODIFIED: Veer is now fully functional
