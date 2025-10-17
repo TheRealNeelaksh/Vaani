@@ -21,36 +21,32 @@
         const userEmailElement = document.getElementById('user-email');
         const logoutButton = document.getElementById('logout-button');
 
-        const handleSession = async () => {
+        const initializeSupabase = async () => {
+            const response = await fetch('/config');
+            const config = await response.json();
+            supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 window.location.href = '/login';
             } else {
                 userEmailElement.textContent = session.user.email;
             }
-        };
 
-        logoutButton.addEventListener('click', async () => {
-            const { error } = await supabase.auth.signOut();
-            if (error) {
-                console.error('Error logging out:', error);
-            } else {
-                window.location.href = '/';
-            }
-        });
-
-        const initializeSupabase = async () => {
-            const response = await fetch('/config');
-            const config = await response.json();
-            supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+            logoutButton.addEventListener('click', async () => {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Error logging out:', error);
+                } else {
+                    window.location.href = '/';
+                }
+            });
 
             supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') {
                     window.location.href = '/';
                 }
             });
-
-            handleSession();
         };
 
         initializeSupabase();

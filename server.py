@@ -35,11 +35,6 @@ app.mount("/static", StaticFiles(directory="web/static"), name="static")
 templates = Jinja2Templates(directory="web/templates")
 SAMPLE_RATE = 16000
 
-# Supabase setup
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_ANON_KEY")
-supabase: Client = create_client(url, key)
-
 # ==============================================================================
 # 2. VAD MODULE
 # ==============================================================================
@@ -149,6 +144,11 @@ async def _process_text_message(websocket: WebSocket, transcript: str, conversat
         log_conversation("AI (text)", full_reply)
     except Exception as e:
         logging.error(f"Error in text message LLM producer: {e}")
+
+# Supabase setup
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = create_client(url, key)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

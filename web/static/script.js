@@ -1,10 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- SUPABASE CLIENT SETUP ---
-    let supabase;
-
-    // --- AUTH MODAL ELEMENTS ---
-    const loginButtons = document.querySelectorAll('.login-btn');
-
     // --- THEME SWITCHER LOGIC ---
     const themeToggle = document.getElementById('theme-toggle');
     const body = document.body;
@@ -97,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startCall = async (contact) => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            alert("You must be logged in to start a call.");
+            window.location.href = '/login';
             return;
         }
 
@@ -128,10 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateChatInputState();
                     updateStatusIndicator('listening');
                     setTimeout(() => { addMessageToChatLog('ai', "I'm connected! By default, we're in VOICE mode. Just start talking! To switch to TEXT mode, press the Mute button."); }, 500);
+
+                    // Attach event listeners for call screen buttons
+                    document.getElementById('end-call-btn').addEventListener('click', () => endCall());
+                    document.getElementById('mute-btn').addEventListener('click', toggleMute);
                 };
                 socket.onmessage = handleSocketMessage;
                 socket.onclose = (event) => {
-                    if (event.code === 4001) { alert("Authentication failed. Please log in again."); }
+                    if (event.code === 4001) { alert("Authentication failed."); }
                     endCall(`Connection closed (code: ${event.code})`);
                 };
                 socket.onerror = () => endCall('A connection error occurred.');
@@ -251,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const startTimer = () => {
+        seconds = 0;
         callTimer.textContent = '00:00';
         timerInterval = setInterval(() => {
             seconds++;
@@ -303,6 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- AUTH LOGIC ---
+    let supabase;
+    const loginButtons = document.querySelectorAll('.login-btn');
+
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
         if (error) {
@@ -322,6 +324,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const initializeApp = async () => {
+        const response = await fetch('/config');
+        const config = await response.json();
+        supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+            updateUserNav(session?.user);
+            initializeUI();
+        });
+
+        const { data: { session } } = await supabase.auth.getSession();
+        updateUserNav(session?.user);
+        initializeUI();
+    };
+
     const initializeUI = () => {
         const accessTaaraBtn = document.querySelector('.access-button[data-model="Taara"]');
         const accessVeerBtn = document.querySelector('.access-button[data-model="Veer"]');
@@ -336,21 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (endCallBtn) endCallBtn.addEventListener('click', () => endCall());
         if (muteBtn) muteBtn.addEventListener('click', toggleMute);
         if (chatForm) chatForm.addEventListener('submit', handleTextMessageSubmit);
-    };
-
-    const initializeApp = async () => {
-        const response = await fetch('/config');
-        const config = await response.json();
-        supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
-
-        supabase.auth.onAuthStateChange((_event, session) => {
-            updateUserNav(session?.user);
-            initializeUI();
-        });
-
-        const { data: { session } } = await supabase.auth.getSession();
-        updateUserNav(session?.user);
-        initializeUI();
     };
 
     initializeApp();
