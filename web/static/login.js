@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         supabase.auth.onAuthStateChange((event, session) => {
             if (session && session.user) {
-                window.location.href = '/';
+                window.location.href = '/app';
             }
         });
     };

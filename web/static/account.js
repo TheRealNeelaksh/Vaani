@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error) {
                     console.error('Error logging out:', error);
                 } else {
-                    window.location.href = '/';
+                    window.location.href = '/login';
                 }
             }
         });

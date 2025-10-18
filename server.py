@@ -83,7 +83,11 @@ async def get_user_from_token(request: Request):
 # ==============================================================================
 
 @app.get("/", response_class=HTMLResponse)
-async def get_index(request: Request):
+async def get_root(request: Request):
+    return RedirectResponse(url="/login")
+
+@app.get("/app", response_class=HTMLResponse)
+async def get_app(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/login", response_class=HTMLResponse)

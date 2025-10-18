@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startCall = async (contact) => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        if (!session && !window.location.pathname.endsWith('/app')) {
             window.location.href = '/login';
             return;
         }

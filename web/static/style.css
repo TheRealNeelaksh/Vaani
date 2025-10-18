@@ -872,3 +872,16 @@ input:checked+.slider:before {
     margin-top: 1rem;
     color: #eee;
 }
+
+.skip-login-link {
+    display: block;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.skip-login-link:hover {
+    color: #fff;
+}
