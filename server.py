@@ -263,3 +263,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 asyncio.create_task(_process_text_message(websocket, message['data'], conversation_history))
     except WebSocketDisconnect:
         logging.info(f"WebSocket connection closed for {selected_character}.")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
