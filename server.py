@@ -12,18 +12,15 @@ import os
 import re
 from typing import List
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from supabase import create_client, Client
-import jwt
-
-from brain.mistralAPI_brain import stream_mistral_chat_async
-from stt.sarvamSTT import transcribe_audio
-from logs.logger import log_conversation
-from tts.elevenLabs.xiTTS import stream_tts_audio
+import requests
+from jose import jwt, JWTError
+from jose.exceptions import ExpiredSignatureError
 
 # ==============================================================================
 # 1. CONFIGURATION & SETUP
@@ -37,11 +34,9 @@ templates = Jinja2Templates(directory="web/templates")
 SAMPLE_RATE = 16000
 
 # Supabase setup
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_ANON_KEY")
-supabase: Client = create_client(url, key)
-JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET")
-
+SUPABASE_URL: str = os.environ.get("SUPABASE_URL")
+SUPABASE_ANON_KEY: str = os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 # ==============================================================================
 # 2. VAD MODULE
@@ -58,25 +53,60 @@ except Exception as e:
     exit()
 
 # ==============================================================================
-# 3. AUTHENTICATION
+# 3. AUTHENTICATION (JWKS Implementation)
 # ==============================================================================
 
-async def get_user_from_token(request: Request):
-    token = request.cookies.get("supabase-auth-token")
+SUPABASE_JWKS_URL = f"{SUPABASE_URL}/auth/v1/keys"
+AUDIENCE = "authenticated"
+_jwk_cache = {}
+
+def get_supabase_public_keys():
+    global _jwk_cache
+    if not _jwk_cache:
+        try:
+            resp = requests.get(SUPABASE_JWKS_URL)
+            resp.raise_for_status()
+            _jwk_cache = {key["kid"]: key for key in resp.json()["keys"]}
+        except requests.RequestException as e:
+            logging.error(f"Failed to fetch Supabase JWKS: {e}")
+            _jwk_cache = {} # Clear cache on failure
+            raise
+    return _jwk_cache
+
+def verify_supabase_token(token: str):
     if not token:
-        return None
+        raise Exception("No token provided")
     try:
-        # The token is a string representation of a list, so we need to parse it
-        token_data = json.loads(token)
-        access_token = token_data[0]['access_token']
-        # In a real app, you should verify the token with Supabase or using the JWT secret
-        # For simplicity here, we'll just decode it.
-        # This is NOT secure for production without proper validation.
-        user = jwt.decode(access_token, JWT_SECRET, audience="authenticated", algorithms=["HS256"])
-        return user
-    except (jwt.InvalidTokenError, KeyError, IndexError, json.JSONDecodeError) as e:
-        logging.warning(f"Token validation failed: {e}")
-        return None
+        headers = jwt.get_unverified_header(token)
+        kid = headers.get("kid")
+        if not kid:
+            raise JWTError("Missing 'kid' in token header")
+
+        jwk = get_supabase_public_keys().get(kid)
+        if not jwk:
+            # If key not found, refresh cache and try again once.
+            logging.warning(f"KID '{kid}' not found in cache, refreshing...")
+            global _jwk_cache
+            _jwk_cache = {}
+            jwk = get_supabase_public_keys().get(kid)
+            if not jwk:
+                raise JWTError(f"Public key with KID '{kid}' not found after refresh")
+
+        payload = jwt.decode(
+            token,
+            jwk,
+            algorithms=["RS256"],
+            audience=AUDIENCE,
+            issuer=f"{SUPABASE_URL}/auth/v1"
+        )
+        return payload
+
+    except ExpiredSignatureError:
+        logging.warning("Token has expired.")
+        raise
+    except JWTError as e:
+        logging.error(f"Invalid token error: {e}")
+        raise
 
 # ==============================================================================
 # 4. FASTAPI SERVER LOGIC
@@ -96,17 +126,15 @@ async def get_login(request: Request):
 
 @app.get("/account", response_class=HTMLResponse)
 async def get_account(request: Request):
-    token = request.cookies.get("supabase-auth-token")
-    if not token:
-        return RedirectResponse(url="/login", status_code=303)
+    # This route is now "soft" protected. The frontend will handle redirects
+    # based on auth state. This is just for serving the page.
     return templates.TemplateResponse("account.html", {"request": request})
-
 
 @app.get("/config")
 async def get_config():
     return {
-        "supabase_url": url,
-        "supabase_anon_key": key,
+        "supabase_url": SUPABASE_URL,
+        "supabase_anon_key": SUPABASE_ANON_KEY,
     }
 
 async def safe_send(websocket: WebSocket, message: dict):
@@ -114,7 +142,6 @@ async def safe_send(websocket: WebSocket, message: dict):
         await websocket.send_text(json.dumps(message))
     except (WebSocketDisconnect, RuntimeError):
         logging.warning("WebSocket is closed, cannot send message.")
-
 
 # --- Processing Pipelines ---
 async def tts_consumer(websocket: WebSocket, text_queue: asyncio.Queue, character_name: str):
@@ -187,29 +214,20 @@ async def _process_text_message(websocket: WebSocket, transcript: str, conversat
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept() # Accept connection first, then authenticate
+
     token = websocket.query_params.get("token")
     selected_character = websocket.query_params.get("character", "Taara")
     logging.info(f"New connection attempt for character: {selected_character}")
 
-    if not token:
-        await websocket.close(code=4001, reason="Authentication failed: No token provided.")
-        return
-
     try:
-        # The token from the client is a string representation of a list, so we parse it.
-        token_data = json.loads(token)
-        access_token = token_data[0]['access_token']
-
-        # Now decode the actual access_token
-        user = jwt.decode(access_token, JWT_SECRET, audience="authenticated", algorithms=["HS256"])
-        if not user:
-            raise Exception("Invalid user from token")
-    except (jwt.InvalidTokenError, KeyError, IndexError, json.JSONDecodeError, Exception) as e:
+        user_payload = verify_supabase_token(token)
+        user_id = user_payload.get("sub")
+        logging.info(f"Successfully authenticated user {user_id}")
+    except Exception as e:
         logging.error(f"Authentication failed: {e}")
-        await websocket.close(code=4001, reason="Authentication failed")
+        await websocket.close(code=4001, reason=f"Authentication Failed: {e}")
         return
-
-    await websocket.accept()
     
     if selected_character == "Veer":
         system_prompt = {"role": "system", "content": "You are Veer, a calm, focused, and strategic thinking partner from the TAARA Network. You are helpful and provide clear, logical advice. You speak concisely and directly. Avoid emotional language and stick to facts and rational analysis."}
@@ -265,7 +283,7 @@ async def websocket_endpoint(websocket: WebSocket):
             elif message['type'] == 'text_message':
                 asyncio.create_task(_process_text_message(websocket, message['data'], conversation_history))
     except WebSocketDisconnect:
-        logging.info(f"WebSocket connection closed for {selected_character}.")
+        logging.info(f"WebSocket connection closed for user {user_id}.")
 
 if __name__ == "__main__":
     import uvicorn
