@@ -196,12 +196,15 @@ async def websocket_endpoint(websocket: WebSocket):
         return
 
     try:
-        # This is not a full validation, but for the scope of this app it's sufficient.
-        # A full validation would involve fetching keys from Supabase and checking the signature.
-        user = jwt.decode(token, JWT_SECRET, audience="authenticated", algorithms=["HS256"])
+        # The token from the client is a string representation of a list, so we parse it.
+        token_data = json.loads(token)
+        access_token = token_data[0]['access_token']
+
+        # Now decode the actual access_token
+        user = jwt.decode(access_token, JWT_SECRET, audience="authenticated", algorithms=["HS256"])
         if not user:
             raise Exception("Invalid user from token")
-    except (jwt.InvalidTokenError, Exception) as e:
+    except (jwt.InvalidTokenError, KeyError, IndexError, json.JSONDecodeError, Exception) as e:
         logging.error(f"Authentication failed: {e}")
         await websocket.close(code=4001, reason="Authentication failed")
         return
