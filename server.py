@@ -25,6 +25,7 @@ from jose.exceptions import ExpiredSignatureError
 # ==============================================================================
 # 1. CONFIGURATION & SETUP
 # ==============================================================================
+from health_check import run_health_check
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -64,7 +65,8 @@ def get_supabase_public_keys():
     global _jwk_cache
     if not _jwk_cache:
         try:
-            resp = requests.get(SUPABASE_JWKS_URL)
+            headers = {"apikey": SUPABASE_ANON_KEY}
+            resp = requests.get(SUPABASE_JWKS_URL, headers=headers)
             resp.raise_for_status()
             _jwk_cache = {key["kid"]: key for key in resp.json()["keys"]}
         except requests.RequestException as e:
@@ -136,6 +138,10 @@ async def get_config():
         "supabase_url": SUPABASE_URL,
         "supabase_anon_key": SUPABASE_ANON_KEY,
     }
+
+@app.get("/health-check")
+async def get_health_check():
+    return run_health_check()
 
 async def safe_send(websocket: WebSocket, message: dict):
     try:
@@ -284,6 +290,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 asyncio.create_task(_process_text_message(websocket, message['data'], conversation_history))
     except WebSocketDisconnect:
         logging.info(f"WebSocket connection closed for user {user_id}.")
+
+@app.on_event("startup")
+async def startup_event():
+    logging.info("Running startup health check...")
+    run_health_check()
 
 if __name__ == "__main__":
     import uvicorn
