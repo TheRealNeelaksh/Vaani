@@ -329,7 +329,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const runHealthCheck = async () => {
+        try {
+            const response = await fetch('/health-check');
+            const result = await response.json();
+
+            if (result.status === 'error' && Object.keys(result.errors).length > 0) {
+                const modal = document.getElementById('health-check-modal');
+                const errorsContainer = document.getElementById('health-check-errors');
+                errorsContainer.innerHTML = '';
+
+                for (const [key, value] of Object.entries(result.errors)) {
+                    const errorElement = document.createElement('p');
+                    errorElement.innerHTML = `<strong>${key}:</strong> ${value}`;
+                    errorsContainer.appendChild(errorElement);
+                }
+
+                modal.style.display = 'flex';
+
+                const retryBtn = document.getElementById('retry-health-check');
+                const skipBtn = document.getElementById('skip-health-check');
+
+                retryBtn.onclick = () => {
+                    modal.style.display = 'none';
+                    runHealthCheck();
+                };
+
+                skipBtn.onclick = () => {
+                    modal.style.display = 'none';
+                };
+            }
+        } catch (error) {
+            console.error('Health check failed:', error);
+            const modal = document.getElementById('health-check-modal');
+            const errorsContainer = document.getElementById('health-check-errors');
+            errorsContainer.innerHTML = '<p>Could not run the health check. Please try again later.</p>';
+            modal.style.display = 'flex';
+        }
+    };
+
     const initializeApp = async () => {
+        await runHealthCheck();
         const response = await fetch('/config');
         const config = await response.json();
         supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
