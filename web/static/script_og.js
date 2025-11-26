@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const callName = document.getElementById('call-name');
     const callTimer = document.getElementById('call-timer');
 
+    // variables
     // State variables
     let timerInterval;
     let seconds = 0;
