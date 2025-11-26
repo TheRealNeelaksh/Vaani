@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://ui.elevenlabs.io/docs/cdn/styles.css">
 </head>
 <body>
     <header class="main-header">
@@ -20,7 +21,7 @@
             </div>
         </div>
         <div id="mode-indicator" class="mode-indicator"></div>
-        <button class="login-btn">Log in</button>
+        <button class="eleven-button--secondary login-btn">Log in</button>
     </header>
 
     <main>
@@ -36,7 +37,7 @@
                             <li><a href="#">Features</a></li>
                         </ul>
                     </nav>
-                    <button class="login-btn">Log in</button>
+                    <button class="eleven-button--secondary login-btn">Log in</button>
                     <div class="theme-switcher">
                         <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.106a.75.75 0 010 1.06l-1.591 1.59a.75.75 0 01-1.06-1.061l1.59-1.591a.75.75 0 011.06 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.894 17.894a.75.75 0 01-1.06 0l-1.59-1.591a.75.75 0 111.06-1.06l1.59 1.591a.75.75 0 010 1.06zM12 21a.75.75 0 01-.75-.75v-2.25a.75.75 0 011.5 0V20.25a.75.75 0 01-.75-.75zM5.106 17.894a.75.75 0 010-1.06l1.591-1.59a.75.75 0 011.06 1.061l-1.59 1.591a.75.75 0 01-1.06 0zM3 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12zM6.106 5.106a.75.75 0 011.06 0l1.59 1.591a.75.75 0 01-1.06 1.06l-1.59-1.591a.75.75 0 010-1.06z"></path></svg>
                         <label class="switch">
@@ -66,7 +67,7 @@
                                     </ul>
                                 </div>
                             </div>
-                            <button class="access-button anim-fade-in" data-model="Taara">Access Taara</button>
+                            <button class="eleven-button--primary access-button anim-fade-in" data-model="Taara">Access Taara</button>
                         </div>
                     </div>
                 </div>
@@ -87,7 +88,7 @@
                                     </ul>
                                 </div>
                             </div>
-                            <button class="access-button anim-fade-in" data-model="Veer">Access Veer</button>
+                            <button class="eleven-button--primary access-button anim-fade-in" data-model="Veer">Access Veer</button>
                         </div>
                     </div>
                 </div>
@@ -100,8 +101,10 @@
                 <div class="chat-column">
                     <div id="chat-log" class="chat-log"></div>
                     <form id="chat-form" class="chat-form">
-                        <input type="text" id="chat-input" placeholder="Mute the call to type a message..." autocomplete="off">
-                        <button type="submit" id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                        <div class="eleven-text-input--container">
+                            <input type="text" id="chat-input" class="eleven-text-input" placeholder="Mute the call to type a message..." autocomplete="off">
+                        </div>
+                        <button type="submit" id="send-btn" class="eleven-button--icon"><i class="fa-solid fa-paper-plane"></i></button>
                     </form>
                 </div>
                 <div class="info-column">
@@ -110,8 +113,8 @@
                         <p id="call-timer">00:00</p>
                         <div id="agent-orb" class="agent-orb"></div>
                         <div class="call-controls">
-                            <button id="mute-btn" class="call-btn mute"><i class="fas fa-microphone-slash"></i> Mute</button>
-                            <button id="end-call-btn" class="call-btn end-call"><i class="fas fa-phone-slash"></i> End call</button>
+                            <button id="mute-btn" class="eleven-button--secondary call-btn mute"><i class="fas fa-microphone-slash"></i> Mute</button>
+                            <button id="end-call-btn" class="eleven-button--danger call-btn end-call"><i class="fas fa-phone-slash"></i> End call</button>
                         </div>
                     </div>
                 </div>
@@ -120,13 +123,25 @@
         <div id="not-available-screen" class="screen">
             <div class="status-box">
                 <p>Veer has not been set-up yet.</p>
-                <button id="go-back-btn" class="go-back-button">Go Back</button>
+                <button id="go-back-btn" class="eleven-button--secondary go-back-button">Go Back</button>
             </div>
         </div>
     </main>
     <audio id="caller-tune" src="{{ url_for('static', path='assets/callertune.mp3') }}" loop preload="auto"></audio>
     <audio id="connection-chime" src="{{ url_for('static', path='assets/chime.wav') }}" preload="auto"></audio>
     <audio id="typing-sound" src="{{ url_for('static', path='assets/chat.mp3') }}" preload="auto"></audio>
+
+    <div id="health-check-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>System Status Alert</h2>
+            <div id="health-check-errors"></div>
+            <div class="modal-actions">
+                <button id="retry-health-check" class="eleven-button--primary">Retry</button>
+                <button id="skip-health-check" class="eleven-button--secondary">Skip</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="{{ url_for('static', path='script.js') }}"></script>
 </body>

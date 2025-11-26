@@ -1,7 +1,2 @@
-.env
-__pycache__/
-*.pyc
-recorded_audio.wav
-output.mp3
-.venv
-venv/
+logs/
+server.log
