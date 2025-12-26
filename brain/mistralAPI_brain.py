@@ -26,6 +26,7 @@ def mistral_chat(user_message, conversation):
     - Keep replies concise and conversational, like you're texting.
     - Use a natural mix of English and Hindi (Hinglish).
     - Be supportive.
+    - Format your responses using Markdown. Use **bold** for emphasis, *italics* for tone, and headers/lists to make your messages easy to read.
     """
     if not conversation or conversation[0]["role"] != "system":
         conversation.insert(0, {"role": "system", "content": system_prompt})
@@ -81,3 +82,34 @@ async def stream_mistral_chat_async(user_message: str, conversation: list):
 
     except Exception as e:
         print(f"❌ Error during async Mistral chat: {e}")
+
+async def summarize_text_async(text: str) -> str:
+    """
+    Summarizes the given text into a shorter version suitable for TTS.
+    """
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        return text
+
+    client = MistralAsyncClient(api_key=api_key)
+    MODEL = "mistral-small-latest"
+
+    prompt = f"""
+    Please summarize the following text to be spoken by an AI assistant.
+    Keep it natural, conversational, and under 30 words.
+    Do not use markdown in the summary.
+
+    Text to summarize:
+    {text}
+    """
+
+    messages = [{"role": "user", "content": prompt}]
+
+    try:
+        response = await client.chat(model=MODEL, messages=messages)
+        if response.choices:
+            return response.choices[0].message.content
+        return text
+    except Exception as e:
+        print(f"❌ Error during summarization: {e}")
+        return text
