@@ -26,6 +26,7 @@ def mistral_chat(user_message, conversation):
     - Keep replies concise and conversational, like you're texting.
     - Use a natural mix of English and Hindi (Hinglish).
     - Be supportive.
+    - Format your responses using Markdown. Use **bold** for emphasis, *italics* for tone, and headers/lists to make your messages easy to read.
     """
     if not conversation or conversation[0]["role"] != "system":
         conversation.insert(0, {"role": "system", "content": system_prompt})
