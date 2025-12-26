@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from brain.mistralAPI_brain import stream_mistral_chat_async
+from brain.mistralAPI_brain import stream_mistral_chat_async, summarize_text_async
 from stt.sarvamSTT import transcribe_audio
 from logs.logger import log_conversation
 from tts.elevenLabs.xiTTS import stream_tts_audio
@@ -76,20 +76,24 @@ async def tts_consumer(websocket: WebSocket, text_queue: asyncio.Queue, characte
     await safe_send(websocket, {"type": "tts_end"})
 
 async def llm_producer(websocket: WebSocket, transcript: str, conversation_history: list, text_queue: asyncio.Queue):
-    full_reply, sentence_buffer = "", ""
-    sentence_delimiters = re.compile(r'(?<=[.?!])\s*')
+    full_reply = ""
     try:
+        # Stream text to UI immediately, but buffer for Audio logic
         async for text_chunk in stream_mistral_chat_async(transcript, conversation_history):
             full_reply += text_chunk
-            sentence_buffer += text_chunk
             await safe_send(websocket, {"type": "ai_text_chunk", "data": text_chunk})
-            parts = sentence_delimiters.split(sentence_buffer)
-            if len(parts) > 1:
-                for i in range(len(parts) - 1):
-                    if parts[i].strip(): await text_queue.put(parts[i].strip())
-                sentence_buffer = parts[-1]
-        if sentence_buffer.strip(): await text_queue.put(sentence_buffer.strip())
+
         log_conversation("AI", full_reply)
+
+        # --- Audio Logic with Summarization ---
+        # 40 words is roughly 2-3 sentences. If longer, summarize.
+        if len(full_reply.split()) > 40:
+            summary = await summarize_text_async(full_reply)
+            logging.info(f"Summarizing long response. Original: {len(full_reply)} chars. Summary: {summary}")
+            await text_queue.put(summary)
+        else:
+            await text_queue.put(full_reply)
+
     except Exception as e:
         logging.error(f"Error in LLM producer: {e}")
         await text_queue.put("I'm sorry, I'm having a little trouble connecting right now.")

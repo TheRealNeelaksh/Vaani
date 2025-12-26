@@ -82,7 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const addMessageToChatLog = (sender, text) => {
         const messageBubble = document.createElement('div');
         messageBubble.className = `message-bubble ${sender}-message`;
-        messageBubble.textContent = text;
+        if (sender === 'ai') {
+            // Initial render
+            messageBubble.dataset.rawText = text;
+            messageBubble.innerHTML = marked.parse(text);
+        } else {
+            messageBubble.textContent = text;
+        }
         chatLog.appendChild(messageBubble);
         chatLog.scrollTop = chatLog.scrollHeight;
         return messageBubble;
@@ -148,7 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await audioContext.audioWorklet.addModule('/static/audio-processor.js');
             workletNode = new AudioWorkletNode(audioContext, 'audio-processor');
             workletNode.port.onmessage = (event) => {
-                if (isMuted || isAiSpeaking || audioQueue.length > 0 || socket?.readyState !== WebSocket.OPEN) return;
+                if (isMuted || isAiSpeaking || audioQueue.length > 0 || socket?.readyState !== WebSocket.OPEN) {
+                    // console.log("Gating audio: Muted:", isMuted, "AiSpeaking:", isAiSpeaking, "Queue:", audioQueue.length);
+                    return;
+                }
                 
                 const audioBuffer = event.data;
                 const base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(audioBuffer)));
@@ -207,7 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         typingSound.play().catch(e => console.error("Typing sound failed:", e));
                     }
                 } 
-                else { currentAiMessageElement.textContent += msg.data; }
+                else {
+                    // Accumulate raw text and re-render Markdown
+                    const newRawText = (currentAiMessageElement.dataset.rawText || "") + msg.data;
+                    currentAiMessageElement.dataset.rawText = newRawText;
+                    currentAiMessageElement.innerHTML = marked.parse(newRawText);
+                }
                 chatLog.scrollTop = chatLog.scrollHeight;
             } else if (msg.type === 'tts_start') {
                 isAiSpeaking = true;

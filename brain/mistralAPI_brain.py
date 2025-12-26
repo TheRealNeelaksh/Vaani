@@ -81,3 +81,34 @@ async def stream_mistral_chat_async(user_message: str, conversation: list):
 
     except Exception as e:
         print(f"❌ Error during async Mistral chat: {e}")
+
+async def summarize_text_async(text: str) -> str:
+    """
+    Summarizes the given text into a shorter version suitable for TTS.
+    """
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        return text
+
+    client = MistralAsyncClient(api_key=api_key)
+    MODEL = "mistral-small-latest"
+
+    prompt = f"""
+    Please summarize the following text to be spoken by an AI assistant.
+    Keep it natural, conversational, and under 30 words.
+    Do not use markdown in the summary.
+
+    Text to summarize:
+    {text}
+    """
+
+    messages = [{"role": "user", "content": prompt}]
+
+    try:
+        response = await client.chat(model=MODEL, messages=messages)
+        if response.choices:
+            return response.choices[0].message.content
+        return text
+    except Exception as e:
+        print(f"❌ Error during summarization: {e}")
+        return text
