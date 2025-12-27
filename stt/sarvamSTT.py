@@ -15,7 +15,7 @@ def transcribe_audio(audio_file):
         with open(audio_file, "rb") as f:
             response = client.speech_to_text.transcribe(
                 file=f,
-                model="saarika:v2",
+                model="saarika:v2.5",
                 language_code="en-IN"
                 )
         transcript = response.transcript
